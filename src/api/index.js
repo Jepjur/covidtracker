@@ -1,33 +1,50 @@
 import axios from 'axios';
 
 const url = 'https://covid19.mathdro.id/api';
-const dailyurl = 'https://covid19.mathdro.id/api/daily';
 
-// Fetches data from the covid19 api
-export const fetchData = async () => {
-    try {
-        const { data: {confirmed, recovered, deaths, lastUpdate }} = await axios.get(url);
+export const fetchData = async (country) => {
+  let changeableUrl = url;
 
-        const modifiedData = { confirmed, recovered, deaths, lastUpdate, }
-        return modifiedData;
+  if (country) {
+    changeableUrl = `${url}/countries/${country}`;
+  }
 
-    } catch (error) {
-        
-    }
-}
+  try {
+    const { data: { confirmed, recovered, deaths, lastUpdate } } = await axios.get(changeableUrl);
 
+    return { confirmed, recovered, deaths, lastUpdate };
+  } catch (error) {
+    return error;
+  }
+};
+
+// export const fetchDailyData = async () => {
+//   try {
+//     const { data } = await axios.get(`${url}/daily`);
+
+//     return data.map(({ confirmed, deaths, reportDate: date }) => ({ confirmed: confirmed.total, deaths: deaths.total, date }));
+//   } catch (error) {
+//     return error;
+//   }
+// };
+
+// Instead of Global, it fetches the daily data for the US
 export const fetchDailyData = async () => {
     try {
-        const { data } = await axios.get(dailyurl);
-
-        const modifiedData = data.map((dailyData) => ({
-            confirmed: dailyData.confirmed.total,
-            deaths: dailyData.deaths.total,
-            date: dailyData.reportDate,
-        }))
-
-        return modifiedData;
+      const { data } = await axios.get('https://api.covidtracking.com/v1/us/daily.json');
+  
+      return data.map(({ positive, recovered, death, dateChecked: date }) => ({ confirmed: positive, recovered, deaths: death, date }));
     } catch (error) {
-        
+      return error;
     }
-}
+  };
+
+export const fetchCountries = async () => {
+  try {
+    const { data: { countries } } = await axios.get(`${url}/countries`);
+
+    return countries.map((country) => country.name);
+  } catch (error) {
+    return error;
+  }
+};
